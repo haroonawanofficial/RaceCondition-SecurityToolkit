@@ -3,8 +3,6 @@ import requests
 import argparse
 import sys
 import numpy as np
-from concurrent.futures import ThreadPoolExecutor
-import sqlite3
 import signal
 import time
 
@@ -16,20 +14,15 @@ GREEN, RED, WHITE, YELLOW, MAGENTA, BLUE, END = '\33[94m', '\033[91m', '\33[97m'
 processed_urls = set()
 
 class DomainExtractor:
-    def __init__(self, domain, want_subdomain, threadNumber, deepcrawl):
+    def __init__(self, domain, want_subdomain, threadNumber):
         self.domain = domain
         self.want_subdomain = want_subdomain
-        self.deepcrawl = deepcrawl
         self.threadNumber = threadNumber
         self.final_url_list = set()
 
     def start(self):
-        if self.deepcrawl:
-            self.startDeepCommonCrawl()
-        else:
-            self.extractUrlsFromWaybackMachine()
-            self.extractUrlsFromOTX()
-            self.extractUrlsFromCommonCrawl([])  # Pass an empty list as a placeholder
+        self.extractUrlsFromWaybackMachine()
+        self.extractUrlsFromOTX()
 
         return self.final_url_list
     
@@ -63,48 +56,6 @@ class DomainExtractor:
         else:
             print(f"Failed to fetch data from AlienVault OTX. Status code: {response.status_code}")
 
-    def startDeepCommonCrawl(self):
-        api_list = self.get_all_api_CommonCrawl()
-        collection_of_api_list = self.split_list(api_list, int(self.threadNumber))
-
-        thread_list = []
-        for thread_num in range(int(self.threadNumber)):
-            t = threading.Thread(target=self.extractUrlsFromCommonCrawl, args=(collection_of_api_list[thread_num],))
-            thread_list.append(t)
-
-        for thread in thread_list:
-            thread.start()
-        for thread in thread_list:
-            thread.join()
-
-    def get_all_api_CommonCrawl(self):
-        url = "http://index.commoncrawl.org/collinfo.json"
-        response = requests.get(url, verify=False)
-        if response.status_code == 200:
-            data = response.json()
-            return [item["cdx-api"] for item in data]
-        else:
-            print(f"Failed to fetch data from CommonCrawl Index. Status code: {response.status_code}")
-            return []
-
-    def extractUrlsFromCommonCrawl(self, apiList):
-        if self.want_subdomain:
-            wild_card = "*."
-        else:
-            wild_card = ""
-
-        final_urls_list = set()
-
-        for api in apiList:
-            url = f"{api}?url={wild_card+self.domain}/*&fl=url"
-            response = requests.get(url, verify=False)
-            if response.status_code == 200:
-                urls_list = response.text.split('\n')
-                urls_list = [url.strip() for url in urls_list if url.strip()]  # Remove empty lines
-                final_urls_list.update(urls_list)
-            else:
-                print(f"Failed to fetch data from CommonCrawl API. Status code: {response.status_code}")
-
     def test_race_conditions(self):
         url_list = list(self.final_url_list)  # Convert the set to a list
 
@@ -114,22 +65,28 @@ class DomainExtractor:
                 response = requests.get(url, verify=False, timeout=10)
                 end_time = time.time()  # Record the end time
                 response_time = end_time - start_time  # Calculate the response time
-                print(f"URL: {url}, Status Code: {response.status_code}, Response Time: {response_time} seconds")
-                # You can add further checks based on response times to identify race conditions
+
+                if response_time < 0.1:
+                    print(f"URL: {url}, Status Code: {response.status_code}, Response Time: {response_time} seconds (Potential Race Condition)")
+                else:
+                    print(f"URL: {url}, Status Code: {response.status_code}, Response Time: {response_time} seconds")
+
+                # You can add more complex checks here, such as comparing response times or status codes
             except requests.exceptions.RequestException as e:
                 print(f"URL: {url}, Error: {str(e)}")
 
+
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='RACE CONDITION TEST')
+    parser = argparse.ArgumentParser(description='Concurrent URL Request Testing')
     parser.add_argument('domain', help='Domain to extract URLs from')
     parser.add_argument('-s', '--subdomain', action='store_true', help='Include subdomains')
     parser.add_argument('-t', '--threads', type=int, default=5, help='Number of concurrent threads')
     args = parser.parse_args()
 
     print("=========================================================================")
-    print(f"[>>] Extracting Domain URLs from: WaybackMachine, AlienVault OTX, CommonCrawl for {args.domain}...")
+    print(f"[>>] Extracting Domain URLs from: WaybackMachine, AlienVault OTX for {args.domain}...")
 
-    domain_extractor = DomainExtractor(args.domain, args.subdomain, args.threads, args.deepcrawl)
+    domain_extractor = DomainExtractor(args.domain, args.subdomain, args.threads)
     final_url_list = domain_extractor.start()
 
     print("=========================================================================")
