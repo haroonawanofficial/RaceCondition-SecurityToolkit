@@ -65,15 +65,20 @@ class DomainExtractor:
 
     def extract_urls_from_otx(self):
         url = f"https://otx.alienvault.com/api/v1/indicators/hostname/{self.domain}/url_list"
-        response = requests.get(url, verify=False)
-        if response.status_code == 200:
+        try:
+            response = requests.get(url, verify=False)
+            response.raise_for_status()  # Raise an exception for HTTP errors
+
             data = response.json()
             urls_list = data.get("url_list", [])
             final_urls_list = {url["url"] for url in urls_list}
             self.final_url_list.update(final_urls_list)
-        else:
+        except requests.exceptions.RequestException as e:
             pass
-            #logging.error(f"Failed to fetch data from AlienVault OTX. Status code: {response.status_code}")
+            #logging.error(f"Failed to fetch data from AlienVault OTX: {str(e)}")
+        except ValueError as e:
+            pass
+            #logging.error(f"Failed to parse OTX response: {str(e)}")
 
     def test_race_conditions(self):
         url_list = list(self.final_url_list)
