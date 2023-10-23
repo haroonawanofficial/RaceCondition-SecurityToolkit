@@ -52,7 +52,8 @@ You can run the tool by providing a list of target URLs or domains using command
 
 ```bash
 python racecondition-securitytoolkit.py -l urls.txt -o results.db
-
+```
 
 ```bash
 python racecondition-securitytoolkit.py -d testphp.vulnweb.com -o results.db --report report.html
+```
