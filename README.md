@@ -1,13 +1,13 @@
 # RaceCondition-SecurityToolkit
 URL Race Condition Scanner detects web application vulnerabilities by identifying race conditions in responses.
 
-# Advanced URL Race Condition Scanner
+# Race Condition Security Toolkit
 
 ![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)
 
 ## Overview
 
-The **Advanced URL Race Condition Scanner** is a powerful tool designed for the detection of potential race conditions in web applications by sending concurrent requests to URLs and analyzing their responses for inconsistencies. It's particularly useful for testing web applications to identify vulnerabilities, unexpected behavior, or data corruption caused by concurrent requests.
+The **Race Condition Security Toolkit** is a powerful tool designed for the detection of potential race conditions in web applications by sending concurrent requests to URLs and analyzing their responses for inconsistencies. It's particularly useful for testing web applications to identify vulnerabilities, unexpected behavior, or data corruption caused by concurrent requests.
 
 ## Multithreading, SQLite Database, and Performance
 
