@@ -133,7 +133,7 @@ if __name__ == '__main__':
     final_url_list = domain_extractor.start()
 
     print("=========================================================================")
-    print("[>>] [Total URLs] : ", len(final_url_list))
+    print("[>>] [Total URLs Tested] : ", len(final_url_list))
 
     # Concurrently test race conditions on the extracted URLs
     domain_extractor.test_race_conditions()
