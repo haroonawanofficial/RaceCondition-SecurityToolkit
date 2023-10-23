@@ -51,4 +51,8 @@ By employing multithreading and a SQLite database, this tool optimizes the detec
 You can run the tool by providing a list of target URLs or domains using command-line arguments. It will then test these URLs for potential race conditions and store extracted URLs in a SQLite database. 
 
 ```bash
-python advanced_race_condition_scanner.py -l urls.txt -o results.db
+python racecondition-securitytoolkit.py -l urls.txt -o results.db
+
+
+```bash
+python racecondition-securitytoolkit.py -d testphp.vulnweb.com -o results.db --report report.html
